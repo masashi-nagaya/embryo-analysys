@@ -42,11 +42,8 @@ from pytext.utils.cuda import FloatTensor
 
 from utils import Bar, Logger, AverageMeter, accuracy, mkdir_p, savefig
 
-
-# Parse arguments
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 
-# Datasets
 parser.add_argument('-d', '--data', default='path to dataset', type=str)
 parser.add_argument('-j', '--workers', default=1, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
@@ -59,15 +56,23 @@ parser.add_argument('--manualSeed', type=int, help='manual seed')
 parser.add_argument('--layer', default=1, type=int, help='number of rnn layer')
 parser.add_argument('--hidden', default=64, type=int, help='number of rnn unit')
 
-parser.add_argument('--beta', default=2.0, type=float, help='number of rnn layer')
+parser.add_argument('--beta', default=2, type=float, help='number of rnn layer')
 parser.add_argument('--epochs', default=10, type=int, help='number of rnn unit')
 
-#Device options
 parser.add_argument('--gpu_id', default='0', type=int,
                     help='id(s) for CUDA_VISIBLE_DEVICES')
 
 parser.add_argument('--val_num', default='1', type=int,
                     help='id(s)')
+
+parser.add_argument('--seed_number', default=5, type=int,
+                    help='seed Number of times')
+
+parser.add_argument('--arch', default='final', type=str,
+                    choices=["final","temporal"],
+                    help='architecture type')
+parser.add_argument('--resume', default='', type=str, metavar='PATH',
+                    help='path to latest checkpoint (default: none)')
 
 args = parser.parse_args()
 state = {k: v for k, v in args._get_kwargs()}
@@ -109,9 +114,9 @@ class EGG(Dataset):
 
         return feature,length,label[0],npz_files[idx]
 
-class VRNN(nn.Module):
+class VRNN_final(nn.Module):
     def __init__(self,input_size=2048,hidden_size=512,num_layers=2,max_seq_len=8,num_classes=2):
-        super(VRNN, self).__init__()
+        super(VRNN_final, self).__init__()
         self.input_size = input_size
         self.max_seq_len = max_seq_len
         self.hidden_size = hidden_size
@@ -144,6 +149,35 @@ class VRNN(nn.Module):
         output = self.fc(output)
         return output
 
+class VRNN_temporal(nn.Module):
+    def __init__(self,input_size=2048,hidden_size=32,num_layers=1,max_seq_len=8,num_classes=2):
+        super(VRNN_temporal, self).__init__()
+        self.input_size = input_size
+        self.max_seq_len = max_seq_len
+        self.hidden_size = hidden_size
+        self.output_size = num_classes
+        self.relu = nn.ReLU(inplace=True)
+        self.rnn = nn.LSTM(input_size,hidden_size,num_layers,batch_first=True) 
+        self.dropout = nn.Dropout()
+
+        self.fc = nn.Linear(hidden_size*2, num_classes)      
+
+    def forward(self,x,lengths):
+        x = torch.nn.utils.rnn.pack_padded_sequence(x, lengths, batch_first=True,enforce_sorted=False)
+        x, _ = self.rnn(x)
+        
+        x, seq_len = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
+
+        avg_pool = F.adaptive_avg_pool1d(x.permute(0,2,1),1).view(x.size(0),-1)
+        max_pool = F.adaptive_max_pool1d(x.permute(0,2,1),1).view(x.size(0),-1)
+
+        pooled_feature = torch.cat([avg_pool,max_pool],dim=1)
+
+        output = self.dropout(pooled_feature)
+        out = self.fc(output)
+        
+        return out
+
 seq_len = 0
 
 for name in os.listdir("./feature/test"+str(args.val_num)):
@@ -163,7 +197,11 @@ val_loader = torch.utils.data.DataLoader(
                                 val_dataset,batch_size=args.test_batch, shuffle=False,
                                 num_workers=args.workers, pin_memory=True)
 
-model = VRNN(hidden_size=args.hidden,num_layers=args.layer)
+if args.arch == "final":
+    model = VRNN_final(hidden_size=args.hidden,num_layers=args.layer)
+elif args.arch == "temporal":
+    model = VRNN_temporal(hidden_size=args.hidden,num_layers=args.layer) 
+
 model = torch.nn.DataParallel(model, device_ids=[int(args.gpu_id)])
 
 
@@ -184,11 +222,11 @@ a_average_csv = []
 p_average_csv = []
 r_average_csv = []
 f_average_csv = []
-pr_average_csv = []
-roc_average_csv = []
+pr_average_csv = ["auc-pr"]
+roc_average_csv = ["auc-roc"]
 
-for i in range(5):
-    checkpoint1 = torch.load("./checkpoints/variable_gru"+str(args.val_num)+"_epoch"+str(args.epochs)+"_beta"+str(args.beta)+"_seed"+str(i+1)+".pth.tar", map_location="cuda:"+str(args.gpu_id))
+for i in range(args.seed_number):
+    checkpoint1 = torch.load(args.resume+str(i+1)+".pth.tar",map_location="cuda:"+str(args.gpu_id))
     model.load_state_dict(checkpoint1['state_dict'])
 
     a_scores = []
@@ -221,8 +259,8 @@ for i in range(5):
         r_all[i] = r_scores
         f_all[i] = f_scores
 
-    pr_average_csv.append(roc_auc_score(grand_truth_list,probs))
-    roc_average_csv.append(average_precision_score(grand_truth_list,probs))
+    roc_average_csv.append(roc_auc_score(grand_truth_list,probs))
+    pr_average_csv.append(average_precision_score(grand_truth_list,probs))
 
 for i in range(len(thresholds)):
     a_average = 0
@@ -234,14 +272,20 @@ for i in range(len(thresholds)):
         p_average += p_all[f][i]
         r_average += r_all[f][i]
         f_average += f_all[f][i]
-    a_average /= 5
-    p_average /= 5
-    r_average /= 5
-    f_average /= 5
+    a_average /= args.seed_number
+    p_average /= args.seed_number
+    r_average /= args.seed_number
+    f_average /= args.seed_number
     a_average_csv.append(a_average)
     p_average_csv.append(p_average)
     r_average_csv.append(r_average)
     f_average_csv.append(f_average)
+
+thresholds.insert(0,"threshold")
+a_average_csv.insert(0,"accuracy")
+p_average_csv.insert(0,"precision")
+r_average_csv.insert(0,"recall")
+f_average_csv.insert(0,"f-measure")
 
 with open('test'+str(args.val_num)+'.csv', 'w') as f:
     writer = csv.writer(f)

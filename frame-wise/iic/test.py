@@ -49,17 +49,13 @@ model_names = customized_models_names
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-
-# Datasets
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-# Optimization options
 parser.add_argument('--test-batch', default=1, type=int, metavar='N',
                     help='test batchsize (default: 1)')
 
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
-# Architecture
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet50',
                     choices=model_names,
                     help='model architecture: ' +
