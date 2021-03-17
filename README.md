@@ -1,7 +1,10 @@
 # embryo-analysys
 
+# Enviroment
 
-
+python : 3.6.9
+PyTorch : 1.4.0
+PyTorch vision : 0.5.0
  
 # Installation
 
