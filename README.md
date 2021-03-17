@@ -55,3 +55,13 @@ when mutual information maximization, change codes as follows:
 ```bash
 python test.py --resume ./checkpoint/pn_mse1.0_seed --val_num 1　--seed_number 5 --mode pn --eval all
 ```
+#### final-frame evaluation
+```bash
+python test.py --resume ./checkpoint/pn_mse1.0_seed --val_num 1　--seed_number 5 --mode pn --eval last
+```
+#### weighted average evaluation
+```bash
+python test_weighted.py --resume ./checkpoint/pn_mse1.0_seed --val_num 1 --seed_number 5 --mode pn
+```
+
+
