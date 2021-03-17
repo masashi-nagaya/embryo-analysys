@@ -6,6 +6,7 @@
 # Installation
 
 Installing PyText
+
 how to install:
 https://github.com/facebookresearch/pytext
 
