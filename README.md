@@ -68,13 +68,28 @@ python test_weighted.py --resume ./checkpoint/pn_mse1.0_seed --val_num 1 --seed_
 python attention.py --resume ./checkpoint/pn_mse1.0_seed1.pth.tar --val_num 1 --test_mode pn
 ```
 
-## recurrent
+## Recurrent
 ### 1. make csv
 ```bash
 python make_csv.py
 ```
-### 1. feature extraction
+### 2. feature extraction
 ```bash
 python extract_aug.py --val_num 1 --resume ./checkpoint/pn1_mse1.0_seed1.pth.tar 
 ```
+### 3. train
+#### final-state feature
+```bash
+python gru_final.py --val_num 1 --manualSeed 1
+```
+#### temporal-pool feature
+```bash
+python gru_temporal.py --val_num 1 --manualSeed 1
+```
+### 4. test
+```bash
+python gru_eval.py --val_num 1 --resume ./checkpoint/variable_gru1_epoch10_beta1.5_seed --arch final 
+```
+
+
 
