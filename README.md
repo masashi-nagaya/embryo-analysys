@@ -68,5 +68,13 @@ python test_weighted.py --resume ./checkpoint/pn_mse1.0_seed --val_num 1 --seed_
 python attention.py --resume ./checkpoint/pn_mse1.0_seed1.pth.tar --val_num 1 --test_mode pn
 ```
 
-
+## recurrent
+### 1. make csv
+```bash
+python make_csv.py
+```
+### 1. feature extraction
+```bash
+python extract_aug.py --val_num 1 --resume ./checkpoint/pn1_mse1.0_seed1.pth.tar 
+```
 
