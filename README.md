@@ -92,7 +92,7 @@ python gru_temporal.py --val_num 1 --manualSeed 1
 ```
 ### 4. test
 ```bash
-python gru_eval.py --val_num 1 --resume ./checkpoint/variable_gru1_epoch10_beta1.5_seed --arch final 
+python gru_eval.py --val_num 1 --resume ./checkpoint/gru1_seed --arch final 
 ```
 
 
