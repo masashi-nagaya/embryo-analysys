@@ -1,17 +1,16 @@
 # embryo-analysys
 
- 
-# Requirement
- 
-"hoge"を動かすのに必要なライブラリなどを列挙する
- 
-* huga 3.5.2
-* hogehuga 1.0.2
+
+
  
 # Installation
- 
+
+Installing PyText
+how to install:
+https://github.com/facebookresearch/pytext
+
 ```bash
-pip install huga_package
+pip install -r requirements.txt
 ```
  
 # Execution
