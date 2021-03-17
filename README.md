@@ -71,6 +71,7 @@ python attention.py --resume ./checkpoint/pn_mse1.0_seed1.pth.tar --val_num 1 --
 ```
 
 ## Recurrent
+
 ### 1. make csv
 ```bash
 python make_csv.py
