@@ -63,5 +63,10 @@ python test.py --resume ./checkpoint/pn_mse1.0_seed --val_num 1　--seed_number 
 ```bash
 python test_weighted.py --resume ./checkpoint/pn_mse1.0_seed --val_num 1 --seed_number 5 --mode pn
 ```
+#### attention map output
+```bash
+python attention.py --resume ./checkpoint/pn_mse1.0_seed1.pth.tar --val_num 1 --test_mode pn
+```
+
 
 
