@@ -5,9 +5,9 @@
  
 # Installation
 
-Installing PyText
+Installing PyText and making virtualenv
 
-how to install:
+how to install Pytext:
 https://github.com/facebookresearch/pytext
 
 after making virtualenv, install requirement.txt
