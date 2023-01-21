@@ -100,5 +100,19 @@ python gru_temporal.py --val_num 1 --manualSeed 1
 python gru_eval.py --val_num 1 --resume ./checkpoint/gru1_seed --arch final 
 ```
 
+## Citation
+Please cite this [paper](https://ieeexplore.ieee.org/document/9606688) in your publications if this dataset helps your research.
+
+```
+@article{
+  title={Embryo grading from unreliable labels by positive-unlabeled classification with ranking},
+  author={Masashi Nagaya and Norimichi Ukita},
+  journal={{IEEE} Transactions on Medical Imaging},
+  volume    = {41},
+  number    = {2},
+  pages     = {320--331},
+  year={2022}
+}
+```
 
 
